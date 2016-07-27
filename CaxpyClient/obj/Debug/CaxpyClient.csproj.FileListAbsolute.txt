@@ -1,0 +1,5 @@
+F:\Experements\Caxpy\CaxpyClient\bin\CaxpyClient.dll.config
+F:\Experements\Caxpy\CaxpyClient\bin\CaxpyClient.dll
+F:\Experements\Caxpy\CaxpyClient\bin\CaxpyClient.pdb
+F:\Experements\Caxpy\CaxpyClient\obj\Debug\CaxpyClient.dll
+F:\Experements\Caxpy\CaxpyClient\obj\Debug\CaxpyClient.pdb

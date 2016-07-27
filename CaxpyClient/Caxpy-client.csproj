@@ -1,0 +1,315 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{591D3F6F-28DF-4877-B730-20D1B9B6E265}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <OutputPath>bin</OutputPath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <TypeScriptToolsVersion>1.8</TypeScriptToolsVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="admin\backup.html" />
+    <Content Include="admin\dashboard.html" />
+    <Content Include="admin\groups.html" />
+    <Content Include="admin\members.html" />
+    <Content Include="admin\settings.html" />
+    <Content Include="app.css" />
+    <Content Include="assets\css\bootstrap.css" />
+    <Content Include="assets\css\main.css" />
+    <Content Include="assets\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="assets\img\1.png" />
+    <Content Include="assets\img\2.png" />
+    <Content Include="assets\img\3.png" />
+    <Content Include="assets\img\4.png" />
+    <Content Include="assets\img\app-bg.png" />
+    <Content Include="assets\img\arrow1.png" />
+    <Content Include="assets\img\arrow2.png" />
+    <Content Include="assets\img\intro01.png" />
+    <Content Include="assets\img\intro02.png" />
+    <Content Include="assets\img\intro03.png" />
+    <Content Include="assets\img\item-01.png" />
+    <Content Include="assets\img\item-02.png" />
+    <Content Include="assets\img\mobile.png" />
+    <Content Include="assets\js\bootstrap.js" />
+    <Content Include="assets\js\jquery.min.js" />
+    <Content Include="assets\js\smoothscroll.js" />
+    <Content Include="chart.html" />
+    <Content Include="css\apprise-v2.css" />
+    <Content Include="css\bootstrap-select.min.css" />
+    <Content Include="css\bootstrap.min.css" />
+    <Content Include="css\c3.min.css" />
+    <Content Include="css\demo.css" />
+    <Content Include="css\external\c3.css" />
+    <Content Include="css\external\c3.min.css" />
+    <Content Include="css\external\jquery-ui.css" />
+    <Content Include="css\external\selectize.default.css" />
+    <Content Include="css\font-awesome.min.css" />
+    <Content Include="css\home.css" />
+    <Content Include="css\jquery.dataTables.css" />
+    <Content Include="css\jquery.dataTables.min.css" />
+    <Content Include="css\jquery.dataTables_themeroller.css" />
+    <Content Include="css\main.css" />
+    <Content Include="css\style.css" />
+    <Content Include="css\style2.css" />
+    <Content Include="dashboards\js\jquery.min.js" />
+    <Content Include="dashboards\logo.png" />
+    <Content Include="dashboards\sales.html" />
+    <Content Include="demo\working.swf" />
+    <Content Include="embed.js" />
+    <Content Include="favicon.ico" />
+    <Content Include="fileuploader.html" />
+    <Content Include="font\fontawesome-webfont.svg" />
+    <Content Include="images\ajax-loader.gif" />
+    <Content Include="images\bg.jpg" />
+    <Content Include="images\caxpy\bubble-report.png" />
+    <Content Include="images\caxpy\chord-report.png" />
+    <Content Include="images\caxpy\databases.png" />
+    <Content Include="images\caxpy\fullscreen-small.png" />
+    <Content Include="images\caxpy\fullscreen.png" />
+    <Content Include="images\cc.png" />
+    <Content Include="images\charts\area.png" />
+    <Content Include="images\charts\bar.png" />
+    <Content Include="images\charts\bubble.png" />
+    <Content Include="images\charts\chords.png" />
+    <Content Include="images\charts\code.png" />
+    <Content Include="images\charts\column.png" />
+    <Content Include="images\charts\doughnut.png" />
+    <Content Include="images\charts\export_black.png" />
+    <Content Include="images\charts\funnel.png" />
+    <Content Include="images\charts\line.png" />
+    <Content Include="images\charts\pie.png" />
+    <Content Include="images\charts\radar.png" />
+    <Content Include="images\charts\scatter.png" />
+    <Content Include="images\charts\share.png" />
+    <Content Include="images\charts\stackbar.png" />
+    <Content Include="images\charts\table.png" />
+    <Content Include="images\logo.png" />
+    <Content Include="images\path4642.png" />
+    <Content Include="images\snapshot.png" />
+    <Content Include="images\sort_asc.png" />
+    <Content Include="images\sort_asc_disabled.png" />
+    <Content Include="images\sort_both.png" />
+    <Content Include="images\sort_desc.png" />
+    <Content Include="images\sort_desc_disabled.png" />
+    <Content Include="index.html" />
+    <Content Include="index_ts.html" />
+    <Content Include="js\angular.min.js" />
+    <Content Include="js\apprise-1.5.min.js" />
+    <Content Include="js\apprise-v2.js" />
+    <Content Include="js\bootstrap.min.js" />
+    <Content Include="js\caxpy-advanced-analytics.js" />
+    <Content Include="js\caxpy-amcharts.js" />
+    <Content Include="js\caxpy-c3.js" />
+    <Content Include="js\caxpy-d3.js" />
+    <Content Include="js\caxpy-d3basic.js" />
+    <Content Include="js\caxpy-dimple.js" />
+    <Content Include="js\caxpy-highcharts.js" />
+    <Content Include="js\caxpy-morris.js" />
+    <Content Include="js\caxpyController.js" />
+    <Content Include="js\d3-funnel.min.js" />
+    <Content Include="js\d3.tip.v0.6.3.js" />
+    <Content Include="js\d3.v3.min.js" />
+    <Content Include="js\d3pie.min.js" />
+    <Content Include="js\dimple.v2.1.2.min.js" />
+    <Content Include="js\external\bootstrap-select.min.js" />
+    <Content Include="js\external\c3.js" />
+    <Content Include="js\external\c3.min.js" />
+    <Content Include="js\external\jspdf.min.js" />
+    <Content Include="js\external\selectize.js" />
+    <Content Include="js\external\watch.js" />
+    <Content Include="js\fileupload\jquery.fileupload.js" />
+    <Content Include="js\fileupload\jquery.iframe-transport.js" />
+    <Content Include="js\fileupload\jquery.ui.widget.js" />
+    <Content Include="js\html5shiv.js" />
+    <Content Include="js\jquery-1.10.2.min.js" />
+    <Content Include="js\jquery-migrate-1.2.1.min.js" />
+    <Content Include="js\jquery-ui.min.js" />
+    <Content Include="js\jquery.dataTables.js" />
+    <Content Include="js\jquery.dataTables.min.js" />
+    <Content Include="js\jquery.easing.1.3.js" />
+    <Content Include="js\jquery.min.js" />
+    <Content Include="js\jquery.particleground.min.js" />
+    <Content Include="js\jquery.tipsy.js" />
+    <Content Include="js\modules\databases.js" />
+    <Content Include="js\modules\init.js" />
+    <Content Include="js\morris.js" />
+    <Content Include="js\raphael\g.pie-min.js" />
+    <Content Include="js\raphael\g.raphael-min.js" />
+    <Content Include="js\raphael\raphael-min.js" />
+    <Content Include="js\Report.js" />
+    <Content Include="js\script.js" />
+    <Content Include="js\theme.js" />
+    <Content Include="login.html" />
+    <Content Include="parameters.html" />
+    <Content Include="Scripts\app\app.js" />
+    <Content Include="Scripts\app\components\CTIchart.js" />
+    <Content Include="Scripts\app\components\d3ModalWindow.js" />
+    <Content Include="Scripts\app\components\d3ModalWindow\d3Modal.js" />
+    <Content Include="Scripts\app\components\d3ModalWindow\d3ModalTemplate.html" />
+    <Content Include="Scripts\app\components\OnionChart.js" />
+    <Content Include="Scripts\app\components\randomColor.js" />
+    <Content Include="Scripts\app\components\sunburstChart.js" />
+    <Content Include="Scripts\app\controllers\dashboardController.js" />
+    <Content Include="Scripts\app\controllers\loginController.js" />
+    <Content Include="Scripts\app\controllers\mainController.js" />
+    <Content Include="Scripts\app\controllers\mainDashboardController.js" />
+    <Content Include="Scripts\app\controllers\mainDashboardV1Controller.js" />
+    <Content Include="Scripts\app\directives\activeAttack\activeAttack.html" />
+    <Content Include="Scripts\app\directives\activeAttack\activeAttack.js" />
+    <Content Include="Scripts\app\directives\activeAttack\activeAttackController.js" />
+    <Content Include="Scripts\app\directives\activeAttack\activeAttackPopupContent.html" />
+    <Content Include="Scripts\app\directives\activeAttack\activeAttackPopupContentController.js" />
+    <Content Include="Scripts\app\directives\activeLog\activeLog.html" />
+    <Content Include="Scripts\app\directives\activeLog\activeLog.js" />
+    <Content Include="Scripts\app\directives\activeLog\activeLogController.js" />
+    <Content Include="Scripts\app\directives\assetsAtRisk\assetsAtRiskController.js" />
+    <Content Include="Scripts\app\directives\assetsAtRisk\assetsAtRiskPopupContent.html" />
+    <Content Include="Scripts\app\directives\assetsAtRisk\assetsAtRiskPopupContentController.js" />
+    <Content Include="Scripts\app\directives\attackDestination\attackDestination.html" />
+    <Content Include="Scripts\app\directives\attackDestination\attackDestination.js" />
+    <Content Include="Scripts\app\directives\attackDestination\attacksDestinationController.js" />
+    <Content Include="Scripts\app\directives\attackSource\attackSource.html" />
+    <Content Include="Scripts\app\directives\attackSource\attackSource.js" />
+    <Content Include="Scripts\app\directives\attackSource\attackSourceController.js" />
+    <Content Include="Scripts\app\directives\attackType\attackType.html" />
+    <Content Include="Scripts\app\directives\attackType\attackType.js" />
+    <Content Include="Scripts\app\directives\attackType\attackTypesController.js" />
+    <Content Include="Scripts\app\directives\commandBar\commandBar.html" />
+    <Content Include="Scripts\app\directives\commandBar\commandBar.js" />
+    <Content Include="Scripts\app\directives\commandBar\commandBarController.js" />
+    <Content Include="Scripts\app\directives\defcon\defcon.html" />
+    <Content Include="Scripts\app\directives\defcon\defcon.js" />
+    <Content Include="Scripts\app\directives\defcon\defconController.js" />
+    <Content Include="Scripts\app\directives\easterEgg\easterEgg.html" />
+    <Content Include="Scripts\app\directives\easterEgg\easterEgg.js" />
+    <Content Include="Scripts\app\directives\easterEgg\easterEggController.js" />
+    <Content Include="Scripts\app\directives\infographicLineChart\infographicLineChart.html" />
+    <Content Include="Scripts\app\directives\infographicLineChart\infographicLineChart.js" />
+    <Content Include="Scripts\app\directives\infographicLineChart\infographicLineChartController.js" />
+    <Content Include="Scripts\app\directives\infographic\infographic.html" />
+    <Content Include="Scripts\app\directives\infographic\infographic.js" />
+    <Content Include="Scripts\app\directives\infographic\infographicController.js" />
+    <Content Include="Scripts\app\directives\infographic\infographicPopupContent.html" />
+    <Content Include="Scripts\app\directives\infographic\infographicPopupContentController.js" />
+    <Content Include="Scripts\app\directives\logo\logo.html" />
+    <Content Include="Scripts\app\directives\logo\logo.js" />
+    <Content Include="Scripts\app\directives\logo\logoController.js" />
+    <Content Include="Scripts\app\services\appSettings.js" />
+    <Content Include="Scripts\app\services\arcLineService.js" />
+    <Content Include="Scripts\app\services\attackDataService.js" />
+    <Content Include="Scripts\app\services\commonService.js" />
+    <Content Include="Scripts\app\services\cyberThreatService.js" />
+    <Content Include="Scripts\app\services\messageService.js" />
+    <Content Include="Scripts\app\services\rabbitmqService.js" />
+    <Content Include="Scripts\app\services\userSettingsService.js" />
+    <Content Include="Scripts\app\templateUrls\dashboard.html" />
+    <Content Include="Scripts\app\templateUrls\dashboardRightBottomPopupContent.html" />
+    <Content Include="Scripts\app\templateUrls\login.html" />
+    <Content Include="Scripts\app\templateUrls\mainDashboard.html" />
+    <Content Include="Scripts\app\templateUrls\mainDashboardV1.html" />
+    <Content Include="Scripts\app\templateUrls\map.html" />
+    <Content Include="Scripts\app\tests\appSettingsConstantTest.js" />
+    <Content Include="Scripts\app\tests\commonServiceTest.js" />
+    <Content Include="Scripts\app\tests\integrationServiceTests.js" />
+    <Content Include="Scripts\libs\angular-ui\angular-animate.js" />
+    <Content Include="Scripts\libs\angular-ui\angular-ui-router.js" />
+    <Content Include="Scripts\libs\angular-ui\angular-ui-router.min.js" />
+    <Content Include="Scripts\libs\angular-ui\ui-bootstrap-tpls-0.13.4.js" />
+    <Content Include="Scripts\libs\angular-ui\ui-bootstrap-tpls.js" />
+    <Content Include="Scripts\libs\angular-ui\ui-bootstrap-tpls.min.js" />
+    <Content Include="Scripts\libs\angular-ui\ui-bootstrap.js" />
+    <Content Include="Scripts\libs\angular-ui\ui-bootstrap.min.js" />
+    <Content Include="Scripts\libs\angularjs\angular-mocks.js" />
+    <Content Include="Scripts\libs\angularjs\angular-ui-router.min.js" />
+    <Content Include="Scripts\libs\angularjs\angular.js" />
+    <Content Include="Scripts\libs\angularjs\angular.min.js" />
+    <Content Include="Scripts\libs\bootstrap\bootstrap.js" />
+    <Content Include="Scripts\libs\bootstrap\bootstrap.min.js" />
+    <Content Include="Scripts\libs\d3\d3.geo.projection.min.js" />
+    <Content Include="Scripts\libs\d3\d3.js" />
+    <Content Include="Scripts\libs\d3\d3.min.js" />
+    <Content Include="Scripts\libs\d3\queue.min.js" />
+    <Content Include="Scripts\libs\dimpleJS\dimple.v2.1.6.js" />
+    <Content Include="Scripts\libs\dimpleJS\dimple.v2.1.6.min.js" />
+    <Content Include="Scripts\libs\jasmine\boot.js" />
+    <Content Include="Scripts\libs\jasmine\console.js" />
+    <Content Include="Scripts\libs\jasmine\jasmine-html.js" />
+    <Content Include="Scripts\libs\jasmine\jasmine.css" />
+    <Content Include="Scripts\libs\jasmine\jasmine.js" />
+    <Content Include="Scripts\libs\jasmine\jasmine_favicon.png" />
+    <Content Include="Scripts\libs\jquery\jquery-1.9.1.min.js" />
+    <Content Include="Scripts\libs\rabbitmq\sockjs-0.3.min.js" />
+    <Content Include="Scripts\libs\rabbitmq\stomp.js" />
+    <Content Include="Scripts\libs\rabbitmq\stomp.min.js" />
+    <Content Include="Scripts\libs\toastr\toastr.min.js" />
+    <Content Include="Scripts\libs\topojson\topojson.v1.min.js" />
+    <Content Include="web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="app.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config" />
+    <Content Include="assets\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="assets\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="assets\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="css\bootstrap.css.map" />
+    <Content Include="font\fontawesome-webfont-.eot" />
+    <Content Include="font\fontawesome-webfont-v=3.2.1.eot" />
+    <Content Include="font\fontawesome-webfont-v=3.2.1.ttf" />
+    <Content Include="font\fontawesome-webfont-v=3.2.1.woff" />
+    <Content Include="Scripts\libs\angularjs\angular.min.js.map" />
+    <Content Include="Scripts\libs\d3\LICENSE" />
+    <None Include="web.Debug.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+    <None Include="web.Release.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>Caxpy_client</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>49609</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:49609/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>false</TypeScriptSourceMap>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+</Project>
