@@ -1,13 +1,14 @@
 
-/// <reference path="../../Scripts/typings/levelup/levelup.d.ts" />
+/// <reference path="../../Scripts/typings/lokijs/lokijs.d.ts" />
 /// <reference path="../model/CaxpyConnection.ts" />
 /// <reference path="../model/CaxpyReport.ts" />
 /// <reference path="../model/Group.ts" />
 /// <reference path="../utility/ReportUtility.ts" />
 /// <reference path="../CaxpyConstants.ts" />
+import {CaxpyReport} from "../model/CaxpyReport";
 "use strict";
 
-import levelup = require("levelup");
+import * as Loki from "lokijs";
 import {CaxpyConnection} from "../model/CaxpyConnection";
 import {CaxpyReport} from "../model/CaxpyReport";
 import {Group} from "../model/Group";
@@ -61,7 +62,7 @@ export class List<T> {
 export class LocalDB {
 
     /** The connection pool. */
-    private static dbConnection: LevelUp = null;
+    private static dbConnection: any = null;
     public static DBName: string = "caxpy";
 
 	/**
@@ -69,10 +70,10 @@ export class LocalDB {
 	 *
 	 * @return the connection pool
 	 */
-    public static getConnection(): LevelUp {
+    public static getConnection(): any {
         if (this.dbConnection == null) {
             try {
-                this.dbConnection = levelup('./' + this.DBName);
+                this.dbConnection = new Loki(this.DBName, { autosave: false });
             } catch (ex) {
 
             }
@@ -88,10 +89,12 @@ export class LocalDB {
     public static getReports(): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('reports', function (err, reports) {
-                if (err) reject(err); // likely the key was not found
+            try{
+                var reports:LokiCollection<CaxpyReport>=$that.getConnection().getCollection<CaxpyReport>("reports");
                 resolve(reports);
-            });
+            }catch (err){
+                if (err) reject(err);
+            }
         });
     }
 
