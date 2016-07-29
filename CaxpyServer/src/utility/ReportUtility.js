@@ -28,19 +28,32 @@ var ReportUtility = (function () {
                     resolve(reportObject);
                 }
                 else if (connectionType == "null" || connectionType.toLowerCase() === CaxpyConstants_1.CaxpyConstants.SQL) {
+                    if (params == null) {
+                        if (reportObject.query_params) {
+                            params = reportObject.query_params;
+                        }
+                    }
+                    $this.refreshJsonDataUsingParams(reportObject, params)
+                        .then(function (response) {
+                        resolve(response);
+                    }, function (err) {
+                        reject(err);
+                    });
                 }
             }
-            if (params == null) {
-                if (reportObject.query_params) {
-                    params = reportObject.query_params;
+            else {
+                if (params == null) {
+                    if (reportObject.query_params) {
+                        params = reportObject.query_params;
+                    }
                 }
+                $this.refreshJsonDataUsingParams(reportObject, params)
+                    .then(function (response) {
+                    resolve(response);
+                }, function (err) {
+                    reject(err);
+                });
             }
-            $this.refreshJsonDataUsingParams(reportObject, params)
-                .then(function (response) {
-                resolve(response);
-            }, function (err) {
-                reject(err);
-            });
         });
     };
     /**

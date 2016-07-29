@@ -33,33 +33,26 @@ export class LocalDB {
 	 * @return the connection pool
 	 */
     public static initDB(): void {
+        //const LokiNativescriptAdapter = require('loki-nativescript-adapter');
         this._db = new Loki(this.DBName, {
             autosave: true,
             autosaveInterval: 1000, // 1 second
             env: 'NODEJS',
-            autoload: true
+            autoload: true,
+           // adapter: new LokiNativescriptAdapter()
+        });
+        this._db.loadDatabase({});
+        this._db.addCollection(DBCollections.REPORTS, {
+            unique: ["reportid"]
         });
 
-        if (!this._getReportCollection()) {
-            this._db.addCollection(DBCollections.REPORTS, {
-                unique: ["reportid"]
-            });
-        }
-        if (!this._getConnectionCollection()) {
-            this._db.addCollection(DBCollections.CONNECTIONS);
-        }
+        this._db.addCollection(DBCollections.CONNECTIONS);
 
-        if (!this._getGroupCollection()) {
-            this._db.addCollection(DBCollections.GROUPS, {
-                unique: ["id"]
-            });
-        }
-        if (!this._getMailSettingCollection()) {
-            this._db.addCollection(DBCollections.MAILSETTINGS);
-        }
-        if (!this._getFileCollection()) {
-            this._db.addCollection(DBCollections.FILES);
-        }
+        this._db.addCollection(DBCollections.GROUPS, {
+            unique: ["id"]
+        });
+        this._db.addCollection(DBCollections.MAILSETTINGS);
+        this._db.addCollection(DBCollections.FILES);
     }
 
 
@@ -122,7 +115,9 @@ export class LocalDB {
             try {
                 var report = $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS).findOne({ reportid: reportid });
                 if (report) {
-                    ReportUtility.refreshJsonData(report, params)
+                    var reportjson = report.reportjson;
+                    reportjson.group_name = report.groupid;
+                    ReportUtility.refreshJsonData(reportjson, params)
                         .then(function (response) {
                             resolve(response);
                         }, function (err) {

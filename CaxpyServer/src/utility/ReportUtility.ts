@@ -31,20 +31,32 @@ export class ReportUtility {
                 if (connectionType.toLowerCase() === CaxpyConstants.CSV) {
                     resolve(reportObject);
                 } else if (connectionType == "null" || connectionType.toLowerCase() === CaxpyConstants.SQL) {
-
+                    if (params == null) {
+                        if (reportObject.query_params) {
+                            params = reportObject.query_params;
+                        }
+                    }
+                    $this.refreshJsonDataUsingParams(reportObject, params)
+                        .then(function (response) {
+                            resolve(response);
+                        }, function (err) {
+                            reject(err);
+                        });
                 }
-            }
-            if (params == null) {
-                if (reportObject.query_params) {
-                    params = reportObject.query_params;
+            } else {
+                if (params == null) {
+                    if (reportObject.query_params) {
+                        params = reportObject.query_params;
+                    }
                 }
+                $this.refreshJsonDataUsingParams(reportObject, params)
+                    .then(function (response) {
+                        resolve(response);
+                    }, function (err) {
+                        reject(err);
+                    });
             }
-            $this.refreshJsonDataUsingParams(reportObject, params)
-                .then(function (response) {
-                    resolve(response);
-                }, function (err) {
-                    reject(err);
-                });
+            
         });
 
     }

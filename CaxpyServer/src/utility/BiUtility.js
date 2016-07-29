@@ -20,14 +20,19 @@ var BiUtility = (function () {
      * @param db the db
      * @return the response
      */
-    BiUtility.getResponse = function (query, db) {
+    BiUtility.getResponse = function (query, connectionName) {
         var $this = this;
         return new Promise(function (resolve, reject) {
-            DBUtils_1.DBUtils.getDBConnection(db)
-                .execute(query, function (error, response) {
-                if (error)
+            LocalDB_1.LocalDB.getConnectionInformation(connectionName)
+                .then(function (con) {
+                DBUtils_1.DBUtils.executeQuery(query, con)
+                    .then(function (response) {
+                    resolve(response);
+                }, function (error) {
                     reject(error);
-                resolve(response);
+                });
+            }, function (error) {
+                reject(error);
             });
         });
     };

@@ -23,31 +23,23 @@ var LocalDB = (function () {
      * @return the connection pool
      */
     LocalDB.initDB = function () {
+        //const LokiNativescriptAdapter = require('loki-nativescript-adapter');
         this._db = new Loki(this.DBName, {
             autosave: true,
             autosaveInterval: 1000,
             env: 'NODEJS',
-            autoload: true
+            autoload: true,
         });
-        if (!this._getReportCollection()) {
-            this._db.addCollection(DBCollections.REPORTS, {
-                unique: ["reportid"]
-            });
-        }
-        if (!this._getConnectionCollection()) {
-            this._db.addCollection(DBCollections.CONNECTIONS);
-        }
-        if (!this._getGroupCollection()) {
-            this._db.addCollection(DBCollections.GROUPS, {
-                unique: ["id"]
-            });
-        }
-        if (!this._getMailSettingCollection()) {
-            this._db.addCollection(DBCollections.MAILSETTINGS);
-        }
-        if (!this._getFileCollection()) {
-            this._db.addCollection(DBCollections.FILES);
-        }
+        this._db.loadDatabase({});
+        this._db.addCollection(DBCollections.REPORTS, {
+            unique: ["reportid"]
+        });
+        this._db.addCollection(DBCollections.CONNECTIONS);
+        this._db.addCollection(DBCollections.GROUPS, {
+            unique: ["id"]
+        });
+        this._db.addCollection(DBCollections.MAILSETTINGS);
+        this._db.addCollection(DBCollections.FILES);
     };
     LocalDB._getMailSettingCollection = function () {
         return this._db.getCollection(DBCollections.MAILSETTINGS);
@@ -107,7 +99,9 @@ var LocalDB = (function () {
             try {
                 var report = $that._db.getCollection(DBCollections.REPORTS).findOne({ reportid: reportid });
                 if (report) {
-                    ReportUtility_1.ReportUtility.refreshJsonData(report, params)
+                    var reportjson = report.reportjson;
+                    reportjson.group_name = report.groupid;
+                    ReportUtility_1.ReportUtility.refreshJsonData(reportjson, params)
                         .then(function (response) {
                         resolve(response);
                     }, function (err) {

@@ -5,6 +5,7 @@
 import {DBUtils} from "../db/DBUtils";
 import {LocalDB} from "../db/LocalDB";
 import {CaxpyReport} from "../model/CaxpyReport";
+import {CaxpyConnection} from "../model/CaxpyConnection";
 
 var Promise = require('promise');
 /**
@@ -24,14 +25,21 @@ export class BiUtility {
 	 * @param db the db
 	 * @return the response
 	 */
-    public static getResponse(query: string, db: string): any {
+    public static getResponse(query: string, connectionName: string): any {
         var $this = this;
         return new Promise(function (resolve, reject) {
-            DBUtils.getDBConnection(db)
-                .execute(query, function (error, response) {
-                    if (error) reject(error);
-                    resolve(response);
+            LocalDB.getConnectionInformation(connectionName)
+                .then(function (con: CaxpyConnection) {
+                    DBUtils.executeQuery(query, con)
+                        .then(function (response) {
+                            resolve(response);
+                        }, function (error) {
+                            reject(error);
+                        })
+                }, function (error) {
+                    reject(error);
                 });
+
         });
     }
 
