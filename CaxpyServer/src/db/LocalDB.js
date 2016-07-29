@@ -1,46 +1,19 @@
-/// <reference path="../../Scripts/typings/levelup/levelup.d.ts" />
-/// <reference path="../model/CaxpyConnection.ts" />
-/// <reference path="../model/CaxpyReport.ts" />
-/// <reference path="../model/Group.ts" />
-/// <reference path="../utility/ReportUtility.ts" />
-/// <reference path="../CaxpyConstants.ts" />
+/// <reference path="../../Scripts/typings/lokijs/lokijs.d.ts" />
 "use strict";
-var levelup = require("levelup");
+var Loki = require("lokijs");
 var ReportUtility_1 = require("../utility/ReportUtility");
 var CaxpyConstants_1 = require("../CaxpyConstants");
 var Promise = require('promise');
-var Map = (function () {
-    function Map() {
-        this.items = {};
+var DBCollections = (function () {
+    function DBCollections() {
     }
-    Map.prototype.add = function (key, value) {
-        this.items[key] = value;
-    };
-    Map.prototype.has = function (key) {
-        return key in this.items;
-    };
-    Map.prototype.get = function (key) {
-        return this.items[key];
-    };
-    return Map;
+    DBCollections.REPORTS = "reports";
+    DBCollections.MAILSETTINGS = "mailsettings";
+    DBCollections.CONNECTIONS = "connections";
+    DBCollections.FILES = "files";
+    DBCollections.GROUPS = "groups";
+    return DBCollections;
 }());
-exports.Map = Map;
-var List = (function () {
-    function List() {
-        this.items = [];
-    }
-    List.prototype.size = function () {
-        return this.items.length;
-    };
-    List.prototype.add = function (value) {
-        this.items.push(value);
-    };
-    List.prototype.get = function (index) {
-        return this.items[index];
-    };
-    return List;
-}());
-exports.List = List;
 var LocalDB = (function () {
     function LocalDB() {
     }
@@ -49,15 +22,55 @@ var LocalDB = (function () {
      *
      * @return the connection pool
      */
-    LocalDB.getConnection = function () {
-        if (this.dbConnection == null) {
-            try {
-                return this.dbConnection = levelup('./' + this.DBName);
-            }
-            catch (ex) {
-            }
+    LocalDB.initDB = function () {
+        this._db = new Loki(this.DBName, {
+            autosave: true,
+            autosaveInterval: 1000,
+            env: 'NODEJS',
+            autoload: true
+        });
+        if (!this._getReportCollection()) {
+            this._db.addCollection(DBCollections.REPORTS, {
+                unique: ["reportid"]
+            });
         }
-        return this.dbConnection;
+        if (!this._getConnectionCollection()) {
+            this._db.addCollection(DBCollections.CONNECTIONS);
+        }
+        if (!this._getGroupCollection()) {
+            this._db.addCollection(DBCollections.GROUPS, {
+                unique: ["id"]
+            });
+        }
+        if (!this._getMailSettingCollection()) {
+            this._db.addCollection(DBCollections.MAILSETTINGS);
+        }
+        if (!this._getFileCollection()) {
+            this._db.addCollection(DBCollections.FILES);
+        }
+    };
+    LocalDB._getMailSettingCollection = function () {
+        return this._db.getCollection(DBCollections.MAILSETTINGS);
+    };
+    /**
+     * Gets the mail settings.
+     *
+     * @return the mail settings
+     */
+    LocalDB.getMailSettings = function () {
+        var $that = this;
+        return new Promise(function (resolve, reject) {
+            var mailsettingsColl = $that._getMailSettingCollection();
+            if (!mailsettingsColl) {
+                reject("No mailsettings");
+            }
+            else {
+                resolve(mailsettingsColl.data);
+            }
+        });
+    };
+    LocalDB._getReportCollection = function () {
+        return this._db.getCollection(DBCollections.REPORTS);
     };
     /**
      * Get all the report from the report location.
@@ -67,89 +80,91 @@ var LocalDB = (function () {
     LocalDB.getReports = function () {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('reports', function (err, reports) {
-                if (err)
-                    reject(err); // likely the key was not found
-                resolve(reports);
-            });
+            try {
+                var reportColl = $that._getReportCollection();
+                if (!reportColl) {
+                    reject("No Reports");
+                }
+                else {
+                    resolve(reportColl.data);
+                }
+            }
+            catch (err) {
+                reject(err);
+            }
         });
     };
     /**
      * Gets the report json.
      *
-     * @param reportid
-     *            the reportid
-     * @param params
-     *            the params
+     * @param reportid the reportid
+     * @param params  the params
      * @return the report json
      */
     LocalDB.getReportJson = function (reportid, params) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var report = reports[reportid];
+            try {
+                var report = $that._db.getCollection(DBCollections.REPORTS).findOne({ reportid: reportid });
                 if (report) {
-                    resolve(ReportUtility_1.ReportUtility.refreshJsonData(report, params));
+                    ReportUtility_1.ReportUtility.refreshJsonData(report, params)
+                        .then(function (response) {
+                        resolve(response);
+                    }, function (err) {
+                        reject(err);
+                    });
                 }
                 else {
-                    reject("No report with id: " + reportid);
+                    reject("No report with reportid : " + reportid);
                 }
-            }, function (err) {
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
      * Save the entered connection information.
      *
-     * @param rep
-     *            the rep
+     * @param rep the rep
      */
-    LocalDB.insertReport = function (rep) {
+    LocalDB.insertReport = function (report) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                if (!reports[rep.reportid]) {
-                    reports[rep.reportid] = rep;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err)
-                            reject(err); // likely the key was not found
-                        resolve(rep);
-                    });
+            try {
+                report = $that._db.getCollection(DBCollections.REPORTS).add(report);
+                if (report) {
+                    resolve(report);
                 }
                 else {
-                    reject("already report exist with id: " + rep.reportid);
+                    reject("Failed to insert Report");
                 }
-            }, function (err) {
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
      * Save the entered connection information.
      *
-     * @param rep
-     *            the rep
+     * @param rep the rep
      */
-    LocalDB.updateReport = function (rep) {
+    LocalDB.updateReport = function (report) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var report = reports[rep.reportid];
+            try {
+                report = $that._db.getCollection(DBCollections.REPORTS).update(report);
                 if (report) {
-                    reports[rep.reportid] = rep;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err)
-                            reject(err); // likely the key was not found
-                        resolve(rep);
-                    });
+                    resolve(report);
                 }
                 else {
-                    reject("reportid not exist id: " + rep.reportid);
+                    reject("Failed to update Report");
                 }
-            }, function (err) {
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
@@ -161,24 +176,21 @@ var LocalDB = (function () {
     LocalDB.updateReportName = function (reportname, groupid, reportid) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var editReport = reports[reportid];
+            try {
+                var reportCollection = $that._db.getCollection(DBCollections.REPORTS);
+                var editReport = reportCollection.findOne({ reportid: reportid });
                 if (editReport) {
                     editReport.groupid = groupid;
                     editReport.reportname = reportname;
-                    reports[reportid] = editReport;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err)
-                            reject(err); // likely the key was not found
-                        resolve(editReport);
-                    });
+                    resolve(reportCollection.update(editReport));
                 }
                 else {
                     reject("No report with reportid : " + reportid);
                 }
-            }, function (err) {
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
@@ -190,37 +202,17 @@ var LocalDB = (function () {
     LocalDB.deleteReport = function (reportid) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                if (!reports[reportid]) {
-                    delete reports[reportid];
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err)
-                            reject(err); // likely the key was not found
-                        resolve(true);
-                    });
-                }
-                else {
-                    reject("report not exist with id: " + reportid);
-                }
-            }, function (err) {
+            try {
+                $that._db.getCollection(DBCollections.REPORTS).removeWhere({ reportid: reportid });
+                resolve(true);
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
-    /**
-     * Gets the mail settings.
-     *
-     * @return the mail settings
-     */
-    LocalDB.getMailSettings = function () {
-        var $that = this;
-        return new Promise(function (resolve, reject) {
-            $that.getConnection().get('mailsettings', function (err, mailsettings) {
-                if (err)
-                    reject(err); // likely the key was not found
-                resolve(mailsettings);
-            });
-        });
+    LocalDB._getConnectionCollection = function () {
+        return this._db.getCollection(DBCollections.CONNECTIONS);
     };
     /**
      * Return the list of all available connections from the database.
@@ -230,11 +222,18 @@ var LocalDB = (function () {
     LocalDB.getConnections = function () {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('connections', function (err, connections) {
-                if (err)
-                    reject(err); // likely the key was not found
-                resolve(connections);
-            });
+            try {
+                var connColl = $that._getConnectionCollection();
+                if (!connColl) {
+                    reject("No Connections.");
+                }
+                else {
+                    resolve(connColl.data);
+                }
+            }
+            catch (err) {
+                reject(err);
+            }
         });
     };
     /**
@@ -248,37 +247,29 @@ var LocalDB = (function () {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        resolve(connections[index]);
-                    }
-                });
-            }, function (err) {
+            try {
+                var connection = $that._getConnectionCollection().findOne({ db: split[0], dbname: split[1] });
+                resolve(connection);
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
      * Save the entered connection information.
-     *
-     * @param c
-     *            the c
-     * @return true, if successful
+     * @param c the connection
      */
-    LocalDB.insertConnection = function (c) {
+    LocalDB.insertConnection = function (connection) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('connections', function (err, connections) {
-                if (err)
-                    reject(err);
-                connections.push(c);
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(c);
-                });
-            });
+            var con = $that._getConnectionCollection().add(connection);
+            if (!con) {
+                reject("failed to insert");
+            }
+            else {
+                resolve(con);
+            }
         });
     };
     /**
@@ -294,20 +285,13 @@ var LocalDB = (function () {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        connections[index] = con;
-                    }
-                });
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                var upCon = $that._getConnectionCollection().update(con);
+                resolve(upCon);
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
     };
     /**
@@ -322,21 +306,17 @@ var LocalDB = (function () {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        connections.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                $that._getConnectionCollection().removeWhere({ db: split[0], dbname: split[1] });
+                resolve(true);
+            }
+            catch (err) {
                 reject(err);
-            });
+            }
         });
+    };
+    LocalDB._getFileCollection = function () {
+        return this._db.getCollection(DBCollections.FILES);
     };
     /**
      * Get file information.
@@ -346,27 +326,18 @@ var LocalDB = (function () {
     LocalDB.getAllDataFiles = function () {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('files', function (err, files) {
-                if (err)
-                    reject(err); // likely the key was not found
-                resolve(files);
-            });
-        });
-    };
-    /**
-     * Gets the all databases.
-     *
-     * @return the all databases
-     */
-    LocalDB.getAllDatabases = function () {
-        var $that = this;
-        return new Promise(function (resolve, reject) {
-            Promise.all([$that.getAllDataFiles(), $that.getConnections()]).then(function (res) {
-                var databases = {};
-                databases[CaxpyConstants_1.CaxpyConstants.SQL] = res[0]; //sqls
-                databases[CaxpyConstants_1.CaxpyConstants.CSV] = res[1]; //files
-                resolve(databases);
-            });
+            try {
+                var fileColl = $that._getFileCollection();
+                if (!fileColl) {
+                    reject("No files.");
+                }
+                else {
+                    resolve(fileColl.data);
+                }
+            }
+            catch (err) {
+                reject(err);
+            }
         });
     };
     /**
@@ -379,11 +350,13 @@ var LocalDB = (function () {
     LocalDB.getFileInformation = function (fileid) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                resolve(files);
-            }, function (err) {
-                reject(err);
-            });
+            var file = $that._getFileCollection().findOne({ id: fileid });
+            if (!file) {
+                reject("No file with fileid: " + fileid);
+            }
+            else {
+                resolve(file);
+            }
         });
     };
     /**
@@ -398,16 +371,13 @@ var LocalDB = (function () {
     LocalDB.saveFileInformation = function (file) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                files.push(file);
-                $that.getConnection().put('files', files, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(file);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            var file = $that._getFileCollection().add(file);
+            if (!file) {
+                reject("failed to insert");
+            }
+            else {
+                resolve(file);
+            }
         });
     };
     /**
@@ -420,21 +390,33 @@ var LocalDB = (function () {
     LocalDB.deleteFileInformation = function (fileid) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                files.forEach(function (item, index) {
-                    if (item.id === fileid) {
-                        files.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('files', files, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                $that._getFileCollection().removeWhere({ id: fileid });
+                resolve(true);
+            }
+            catch (err) {
                 reject(err);
+            }
+        });
+    };
+    /**
+     * Gets the all databases.
+     *
+     * @return the all databases
+     */
+    LocalDB.getAllDatabases = function () {
+        var $that = this;
+        return new Promise(function (resolve, reject) {
+            Promise.all([$that.getAllDataFiles(), $that.getConnections()]).then(function (res) {
+                var databases = {};
+                databases[CaxpyConstants_1.CaxpyConstants.CSV] = res[0]; //sqls
+                databases[CaxpyConstants_1.CaxpyConstants.SQL] = res[1]; //files
+                resolve(databases);
             });
         });
+    };
+    LocalDB._getGroupCollection = function () {
+        return this._db.getCollection(DBCollections.GROUPS);
     };
     /**
      * Gets the all report groups.
@@ -444,11 +426,13 @@ var LocalDB = (function () {
     LocalDB.getAllGroups = function () {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('groups', function (err, groups) {
-                if (err)
-                    reject(err); // likely the key was not found
-                resolve(groups);
-            });
+            var groupColl = $that._getGroupCollection();
+            if (!groupColl) {
+                reject("No Groups");
+            }
+            else {
+                resolve(groupColl.data);
+            }
         });
     };
     //crud for group
@@ -460,16 +444,13 @@ var LocalDB = (function () {
     LocalDB.insertGroup = function (gp) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.push(gp);
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(gp);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            var group = $that._getGroupCollection().add(gp);
+            if (!group) {
+                reject("Faield to insert Group");
+            }
+            else {
+                resolve(group);
+            }
         });
     };
     /**
@@ -480,20 +461,13 @@ var LocalDB = (function () {
     LocalDB.updateGroup = function (gp) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.forEach(function (item, index) {
-                    if (item.id === gp.id) {
-                        groups[index] = gp;
-                    }
-                });
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            var group = $that._getGroupCollection().update(gp);
+            if (!group) {
+                reject("Faield to update Group");
+            }
+            else {
+                resolve(group);
+            }
         });
     };
     /**
@@ -504,39 +478,21 @@ var LocalDB = (function () {
     LocalDB.deleteGroup = function (groupId) {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.forEach(function (item, index) {
-                    if (item.id === groupId) {
-                        groups.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err)
-                        reject(err);
-                    resolve(true);
-                    $that.deleteReportGroupMapping(groupId);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            $that._getGroupCollection().removeWhere({ id: groupId });
+            resolve(true);
+            $that.deleteReportGroupMapping(groupId);
         });
     };
     LocalDB.deleteReportGroupMapping = function (groupId) {
         var $that = this;
-        $that.getReports().then(function (reports) {
-            reports.forEach(function (item, index) {
-                if (item.groupid === groupId) {
-                    reports[index].groupid = 0;
-                }
-            });
-            $that.getConnection().put('reports', reports, function (err) {
-            });
-        }, function (err) {
+        $that._getReportCollection().findAndUpdate(function (report) {
+            return report.groupid === groupId;
+        }, function (report) {
+            report.groupid = 0;
+            return report;
         });
     };
-    /** The connection pool. */
-    LocalDB.dbConnection = null;
-    LocalDB.DBName = "caxpy";
+    LocalDB.DBName = "caxpy.db";
     return LocalDB;
 }());
 exports.LocalDB = LocalDB;

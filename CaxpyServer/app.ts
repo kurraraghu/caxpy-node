@@ -1,7 +1,7 @@
 ﻿/// <reference path="Scripts/typings/express/express.d.ts" />
 /// <reference path="Scripts/typings/node/node.d.ts" />
 /// <reference path="Scripts/typings/body-parser/body-parser.d.ts" />
-/// <reference path="src/routes/Report.ts" />
+/// <reference path="src/db/LocalDB.ts" />
 "use strict";
 
 import * as express from 'express';
@@ -9,11 +9,16 @@ import * as bodyParser from 'body-parser';
 import http = require('http');
 import path = require('path');
 
+import {LocalDB} from "./src/db/LocalDB";
+
 //Import Routes
-//var report = require('src/routes/Report');
+var ReportServiceRouter = require('./src/routes/Report');
 var DataServiceRouter=require('./src/routes/DataService') ;
 
 const app = express();
+
+//Initialize Local DB
+LocalDB.initDB();
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -46,21 +51,11 @@ app.all('/*', function (req, res, next) {
 // are sure that authentication is not needed
 //app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
 
-app.get('/report', function(req: express.Request, res: express.Response) {
-    var params = req.body.params;
-    var reportid = req.body.reportid;
-    //ReportUtility.getReportJson(BiUtility.getReportId(reportid), params)
-    //    .then(function (response) {
-    //        res.status(200).json(response);
-    //    }, function (error) {
-    //        res.status(500).json(error);
-    //    });
-    res.status(200).json("success");
-});
+// Rest call for Report service requests
+ReportServiceRouter(app);
 
 //get router
 let router: express.Router= express.Router();
-
 //DataServiceRouter(app);
 DataServiceRouter(router);
 //use router middleware
@@ -72,6 +67,8 @@ app.use(function (req, res, next) {
     err.name = "404";
     next(err);
 });
+
+
 
 //create http server
 var server = http.createServer(app);

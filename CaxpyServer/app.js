@@ -1,15 +1,18 @@
 /// <reference path="Scripts/typings/express/express.d.ts" />
 /// <reference path="Scripts/typings/node/node.d.ts" />
 /// <reference path="Scripts/typings/body-parser/body-parser.d.ts" />
-/// <reference path="src/routes/Report.ts" />
+/// <reference path="src/db/LocalDB.ts" />
 "use strict";
 var express = require('express');
 var bodyParser = require('body-parser');
 var http = require('http');
+var LocalDB_1 = require("./src/db/LocalDB");
 //Import Routes
-//var report = require('src/routes/Report');
+var ReportServiceRouter = require('./src/routes/Report');
 var DataServiceRouter = require('./src/routes/DataService');
 var app = express();
+//Initialize Local DB
+LocalDB_1.LocalDB.initDB();
 // all environments
 app.set('port', process.env.PORT || 3000);
 // configure our app to use bodyParser(it let us get the json data from a POST)
@@ -36,17 +39,8 @@ app.all('/*', function (req, res, next) {
 // Any URL's that do not follow the below pattern should be avoided unless you 
 // are sure that authentication is not needed
 //app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
-app.get('/report', function (req, res) {
-    var params = req.body.params;
-    var reportid = req.body.reportid;
-    //ReportUtility.getReportJson(BiUtility.getReportId(reportid), params)
-    //    .then(function (response) {
-    //        res.status(200).json(response);
-    //    }, function (error) {
-    //        res.status(500).json(error);
-    //    });
-    res.status(200).json("success");
-});
+// Rest call for Report service requests
+ReportServiceRouter(app);
 //get router
 var router = express.Router();
 //DataServiceRouter(app);

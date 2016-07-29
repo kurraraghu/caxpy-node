@@ -10,10 +10,11 @@ function openReport(report_name) {
 	$.ajax({
 	    url : hostAddr+"data/service/report",
 		type : "GET",
-		data : {
-			"reportid" : report_name.split("-")[0]
+		data: {
+		    reportid : report_name.split("-")[0]
 		}
-	}).done(function(data) {
+	}).done(function (response) {
+	    var data = response.reportjson;
 		report = new Report();
 		hideAlertMessage();
 		showQueryBox();
@@ -95,10 +96,12 @@ function openReportExecuteQuery(query) {
 	$.ajax({
 	    url: hostAddr + "data/service/execute",
 		type : "GET",
-		data : {
-			"query" : getExecutableQuery(),
-			"db" : report.connection ? report.connection :  $("#connections").val()
-		}
+		data : JSON.stringify({
+		    query : getExecutableQuery(),
+		    db : report.connection ? report.connection : $("#connections").val()
+		}),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json"
 	}).done(function(data) {
 		// pre process data
 		var dotdot = false;
@@ -149,9 +152,11 @@ function deleteReport() {
 			$.ajax({
 			    url: hostAddr + "data/service/delete",
 				type : "GET",
-				data : {
-					"report_name" : report.report_name
-				},
+				data :JSON.stringify({
+				    report_name : report.report_name
+				}),
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
 				statusCode : {
 					200 : function() {
 						var temp = report.report_id;
@@ -233,11 +238,13 @@ function save() {
 		var gpname = $.trim($("#group_name").val())==""? 0 : $.trim($("#group_name").val());
 		$.ajax({
 		    url: hostAddr + "data/service/save",
-			type : "POST",
-			data : {
-				"report" : JSON.stringify(reportx), 
-				"groupid" : gpname
-			}
+		    type: "POST",
+		    data: JSON.stringify({
+		        report: reportx,
+		        groupid: gpname
+		    }),
+			contentType: "application/json; charset=utf-8",
+			dataType: "json"
 		// save the entire report as a json object in the backend.
 		}).done(function(data) {
 			if (data.status == 'success') {
@@ -303,9 +310,9 @@ function saveSettings() {
 	$.ajax({
 	    url: hostAddr + "data/service/savesettings",
 		type : "POST",
-		data : {
-			"settings" : JSON.stringify(settings)
-		},
+		data: JSON.stringify({ settings: settings }),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
 		statusCode : {
 			200 : function() {
 				$('#settingsDialog').modal('hide');
@@ -359,10 +366,12 @@ var executeQuery = function(query) {
 	$.ajax({
 	    url: hostAddr + "data/service/execute",
 		type : "GET",
-		data : {
-			"query" : getExecutableQuery(),
-			"db" : report.connection ? report.connection : $("#connections").val()
-		}
+		data : JSON.stringify({
+		    query : getExecutableQuery(),
+		    db : report.connection ? report.connection : $("#connections").val()
+		}),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json"
 	}).done(function(data) {
 		hideAlertMessage();
 		if (data.length == 0) {
@@ -463,10 +472,12 @@ function regenerateReport(newQuery) {
 	$.ajax({
 	    url: hostAddr + "data/service/execute",
 		type : "GET",
-		data : {
-			"query" : getExecutableQuery(),
-			"db" : report.connection ? report.connection : $("#connections").val()
-		}
+		data :JSON.stringify({
+		    query : getExecutableQuery(),
+		    db : report.connection ? report.connection : $("#connections").val()
+		}),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json"
 	}).done(function(data) {
 		NProgress.done();
 		// pre process data
@@ -903,11 +914,13 @@ function saveEditedDetails(){
 	$.ajax({
 	    url: hostAddr + "data/service/saveedits",
 		type : "POST",
-		data : {
-			"reportid" : $("#ereportid").val(), 
-			"groupid" : gpname,
-			"reportname" : $("#ereport_name").val()
-		},
+		data :JSON.stringify({
+		    reportid : $("#ereportid").val(),
+		    groupid : gpname,
+		    reportname : $("#ereport_name").val()
+		}),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
 		statusCode : {
 			200 : function() {
 				getReports();

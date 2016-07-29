@@ -1,11 +1,5 @@
-
 /// <reference path="../../Scripts/typings/lokijs/lokijs.d.ts" />
-/// <reference path="../model/CaxpyConnection.ts" />
-/// <reference path="../model/CaxpyReport.ts" />
-/// <reference path="../model/Group.ts" />
-/// <reference path="../utility/ReportUtility.ts" />
-/// <reference path="../CaxpyConstants.ts" />
-import {CaxpyReport} from "../model/CaxpyReport";
+
 "use strict";
 
 import * as Loki from "lokijs";
@@ -17,70 +11,82 @@ import {ReportUtility} from "../utility/ReportUtility";
 import {CaxpyConstants} from "../CaxpyConstants";
 var Promise = require('promise');
 
-
-export class Map<T> {
-    private items: { [key: string]: T };
-
-    constructor() {
-        this.items = {};
-    }
-
-    add(key: string, value: T): void {
-        this.items[key] = value;
-    }
-
-    has(key: string): boolean {
-        return key in this.items;
-    }
-
-    get(key: string): T {
-        return this.items[key];
-    }
-}
-
-export class List<T> {
-    private items: Array<T>;
-
-    constructor() {
-        this.items = [];
-    }
-
-    size(): number {
-        return this.items.length;
-    }
-
-    add(value: T): void {
-        this.items.push(value);
-    }
-
-    get(index: number): T {
-        return this.items[index];
-    }
+ 
+class DBCollections {
+    public static REPORTS: string = "reports";
+    public static MAILSETTINGS: string = "mailsettings";
+    public static CONNECTIONS: string = "connections";
+    public static FILES: string = "files";
+    public static GROUPS: string = "groups";
 }
 
 
 export class LocalDB {
 
     /** The connection pool. */
-    private static dbConnection: any = null;
-    public static DBName: string = "caxpy";
+    private static _db: Loki;
+    public static DBName: string = "caxpy.db";
 
 	/**
 	 * use a single connection pool.
 	 *
 	 * @return the connection pool
 	 */
-    public static getConnection(): any {
-        if (this.dbConnection == null) {
-            try {
-                this.dbConnection = new Loki(this.DBName, { autosave: false });
-            } catch (ex) {
+    public static initDB(): void {
+        this._db = new Loki(this.DBName, {
+            autosave: true,
+            autosaveInterval: 1000, // 1 second
+            env: 'NODEJS',
+            autoload: true
+        });
 
-            }
+        if (!this._getReportCollection()) {
+            this._db.addCollection(DBCollections.REPORTS, {
+                unique: ["reportid"]
+            });
         }
-        return this.dbConnection;
+        if (!this._getConnectionCollection()) {
+            this._db.addCollection(DBCollections.CONNECTIONS);
+        }
+
+        if (!this._getGroupCollection()) {
+            this._db.addCollection(DBCollections.GROUPS, {
+                unique: ["id"]
+            });
+        }
+        if (!this._getMailSettingCollection()) {
+            this._db.addCollection(DBCollections.MAILSETTINGS);
+        }
+        if (!this._getFileCollection()) {
+            this._db.addCollection(DBCollections.FILES);
+        }
     }
 
+
+    private static _getMailSettingCollection(): LokiCollection<any> {
+        return this._db.getCollection<any>(DBCollections.MAILSETTINGS)
+    }
+	/**
+	 * Gets the mail settings.
+	 *
+	 * @return the mail settings
+	 */
+    public static getMailSettings(): any {
+        var $that = this;
+        return new Promise(function (resolve, reject) {
+            var mailsettingsColl = $that._getMailSettingCollection();
+            if (!mailsettingsColl) {
+                reject("No mailsettings");
+            } else {
+                resolve(mailsettingsColl.data);
+            }
+        });
+    }
+
+    private static _getReportCollection(): LokiCollection<CaxpyReport> {
+        return this._db.getCollection<CaxpyReport>(DBCollections.REPORTS)
+    } 
+     
     /**
 	 * Get all the report from the report location.
 	 *
@@ -89,11 +95,15 @@ export class LocalDB {
     public static getReports(): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            try{
-                var reports:LokiCollection<CaxpyReport>=$that.getConnection().getCollection<CaxpyReport>("reports");
-                resolve(reports);
+            try {
+                var reportColl = $that._getReportCollection();
+                if (!reportColl) {
+                    reject("No Reports");
+                } else {
+                    resolve(reportColl.data);
+                }
             }catch (err){
-                if (err) reject(err);
+                reject(err);
             }
         });
     }
@@ -102,52 +112,49 @@ export class LocalDB {
 	/**
 	 * Gets the report json.
 	 *
-	 * @param reportid
-	 *            the reportid
-	 * @param params
-	 *            the params
+	 * @param reportid the reportid
+	 * @param params  the params
 	 * @return the report json
 	 */
     public static getReportJson(reportid: number, params: Array<any>): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var report = reports[reportid];
+            try {
+                var report = $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS).findOne({ reportid: reportid });
                 if (report) {
-                    resolve(ReportUtility.refreshJsonData(report, params));
+                    ReportUtility.refreshJsonData(report, params)
+                        .then(function (response) {
+                            resolve(response);
+                        }, function (err) {
+                            reject(err);
+                        });
                 } else {
-                    reject("No report with id: " + reportid);
+                    reject("No report with reportid : " + reportid);
                 }
-            }, function (err) {
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
-
-
 
 	/**
 	 * Save the entered connection information.
 	 *
-	 * @param rep
-	 *            the rep
+	 * @param rep the rep
 	 */
-    public static insertReport(rep: CaxpyReport): any {
+    public static insertReport(report: CaxpyReport): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                if (!reports[rep.reportid]) {
-                    reports[rep.reportid] = rep;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err) reject(err); // likely the key was not found
-                        resolve(rep);
-                    });
+            try {
+                report = $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS).add(report);
+                if (report) {
+                    resolve(report);
                 } else {
-                    reject("already report exist with id: " + rep.reportid);
+                    reject("Failed to insert Report");
                 }
-            }, function (err) {
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
 
@@ -155,30 +162,23 @@ export class LocalDB {
     /**
 	 * Save the entered connection information.
 	 *
-	 * @param rep
-	 *            the rep
+	 * @param rep the rep
 	 */
-    public static updateReport(rep: CaxpyReport): any {
+    public static updateReport(report: CaxpyReport): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var report = reports[rep.reportid];
+            try {
+                report = $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS).update(report);
                 if (report) {
-                    reports[rep.reportid] = rep;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err) reject(err); // likely the key was not found
-                        resolve(rep);
-                    });
+                    resolve(report);
                 } else {
-                    reject("reportid not exist id: " + rep.reportid);
+                    reject("Failed to update Report");
                 }
-            }, function (err) {
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
-
-
 
     /**
      * Save the entered connection information.
@@ -189,22 +189,20 @@ export class LocalDB {
     public static updateReportName(reportname: string, groupid: number, reportid: number): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                var editReport = reports[reportid];
+            try {
+                var reportCollection = $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS);
+                var editReport = reportCollection.findOne({ reportid: reportid });
                 if (editReport) {
                     editReport.groupid = groupid;
                     editReport.reportname = reportname;
-                    reports[reportid] = editReport;
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err) reject(err); // likely the key was not found
-                        resolve(editReport);
-                    });
+                    resolve(reportCollection.update(editReport));
                 } else {
                     reject("No report with reportid : " + reportid);
                 }
-            }, function (err) {
+            } catch (err) {
                 reject(err);
-            });
+            }
+ 
         });
 
     }
@@ -218,37 +216,21 @@ export class LocalDB {
     public static deleteReport(reportid: number): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getReports().then(function (reports) {
-                if (!reports[reportid]) {
-                    delete reports[reportid];
-                    $that.getConnection().put('reports', reports, function (err) {
-                        if (err) reject(err); // likely the key was not found
-                        resolve(true);
-                    });
-                } else {
-                    reject("report not exist with id: " + reportid);
-                }
-            }, function (err) {
+            try {
+                $that._db.getCollection<CaxpyReport>(DBCollections.REPORTS).removeWhere({ reportid: reportid });
+                resolve(true);
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
 
-	/**
-	 * Gets the mail settings.
-	 *
-	 * @return the mail settings
-	 */
-    public static getMailSettings(): any {
-        var $that = this;
-        return new Promise(function (resolve, reject) {
-            $that.getConnection().get('mailsettings', function (err, mailsettings) {
-                if (err) reject(err); // likely the key was not found
-                resolve(mailsettings);
-            });
-        });
-    }
 
+
+
+    private static _getConnectionCollection(): LokiCollection<CaxpyConnection> {
+        return this._db.getCollection<CaxpyConnection>(DBCollections.CONNECTIONS)
+    } 
 
 	/**
 	 * Return the list of all available connections from the database.
@@ -258,10 +240,16 @@ export class LocalDB {
     public static getConnections(): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('connections', function (err, connections) {
-                if (err) reject(err); // likely the key was not found
-                resolve(connections);
-            });
+            try {
+                var connColl = $that._getConnectionCollection();
+                if (!connColl) {
+                    reject("No Connections.");
+                } else {
+                    resolve(connColl.data);
+                }
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 
@@ -278,39 +266,29 @@ export class LocalDB {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        resolve(connections[index]);
-                    }
-                });
-            }, function (err) {
+            try {
+                var connection = $that._getConnectionCollection().findOne({ db: split[0], dbname: split[1]});
+                resolve(connection);
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
 
 
-
 	/**
 	 * Save the entered connection information.
-	 *
-	 * @param c
-	 *            the c
-	 * @return true, if successful
+	 * @param c the connection
 	 */
-    public static insertConnection(c: CaxpyConnection): any {
+    public static insertConnection(connection: CaxpyConnection): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('connections', function (err, connections) {
-                if (err) reject(err);
-                connections.push(c);
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err) reject(err);
-                    resolve(c);
-                });
-
-            });
+            var con = $that._getConnectionCollection().add(connection);
+            if (!con) {
+                reject("failed to insert");
+            } else {
+                resolve(con);
+            }
         });
     }
 
@@ -329,24 +307,14 @@ export class LocalDB {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        connections[index] = con;
-                    }
-                });
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err) reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                var upCon = $that._getConnectionCollection().update(con);
+                resolve(upCon);
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
-
     }
-
-
 
 	/**
 	 * Delete the connection from database the connectionname is a combination
@@ -360,24 +328,20 @@ export class LocalDB {
         var $that = this;
         var split = connectionname.split("-", 2);
         return new Promise(function (resolve, reject) {
-            $that.getConnections().then(function (connections) {
-                connections.forEach(function (item, index) {
-                    if (item.db === split[0] && item.dbname === split[1]) {
-                        connections.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('connections', connections, function (err) {
-                    if (err) reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                $that._getConnectionCollection().removeWhere({ db: split[0], dbname: split[1] });
+                resolve(true);
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
     }
 
 
 
+    private static _getFileCollection(): LokiCollection<any> {
+        return this._db.getCollection<any>(DBCollections.FILES);
+    }
     /**
 	 * Get file information.
 	 *id,filename,datajson
@@ -386,30 +350,18 @@ export class LocalDB {
     public static getAllDataFiles(): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('files', function (err, files) {
-                if (err) reject(err); // likely the key was not found
-                resolve(files);
-            });
+            try {
+                var fileColl = $that._getFileCollection();
+                if (!fileColl) {
+                    reject("No files.");
+                } else {
+                    resolve(fileColl.data);
+                }
+            } catch (err) {
+                reject(err);
+            }
         });
     }
-
-    /**
-	 * Gets the all databases.
-	 *
-	 * @return the all databases
-	 */
-    public static getAllDatabases(): any {
-        var $that = this;
-        return new Promise(function (resolve, reject) {
-            Promise.all([$that.getAllDataFiles(), $that.getConnections()]).then(res => {
-                var databases = {};
-                databases[CaxpyConstants.SQL] = res[0];//sqls
-                databases[CaxpyConstants.CSV] = res[1];//files
-                resolve(databases);
-            });
-        });
-    }
-
 
     /**
      * Get file information.
@@ -421,11 +373,12 @@ export class LocalDB {
     public static getFileInformation(fileid: number): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                resolve(files);
-            }, function (err) {
-                reject(err);
-            });
+            var file = $that._getFileCollection().findOne({ id: fileid });
+            if (!file) {
+                reject("No file with fileid: " + fileid);
+            } else {
+                resolve(file);
+            }
         });
     }
 
@@ -442,22 +395,15 @@ export class LocalDB {
     public static saveFileInformation(file): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                files.push(file);
-                $that.getConnection().put('files', files, function (err) {
-                    if (err) reject(err);
-                    resolve(file);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            var file = $that._getFileCollection().add(file);
+            if (!file) {
+                reject("failed to insert");
+            } else {
+                resolve(file);
+            }
         });
-
     }
-
-
-
-
+    
 
 	/**
 	 * Delete file information.
@@ -469,26 +415,37 @@ export class LocalDB {
     public static deleteFileInformation(fileid: number): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllDataFiles().then(function (files) {
-                files.forEach(function (item, index) {
-                    if (item.id === fileid) {
-                        files.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('files', files, function (err) {
-                    if (err) reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
+            try {
+                $that._getFileCollection().removeWhere({ id: fileid });
+                resolve(true);
+            } catch (err) {
                 reject(err);
-            });
+            }
         });
-
     }
 
 
+    /**
+	 * Gets the all databases.
+	 *
+	 * @return the all databases
+	 */
+    public static getAllDatabases(): any {
+        var $that = this;
+        return new Promise(function (resolve, reject) {
+            Promise.all([$that.getAllDataFiles(), $that.getConnections()]).then(res => {
+                var databases = {};
+                databases[CaxpyConstants.CSV] = res[0];//sqls
+                databases[CaxpyConstants.SQL] = res[1];//files
+                resolve(databases);
+            });
+        });
+    }
 
 
+    private static _getGroupCollection(): LokiCollection<Group> {
+        return this._db.getCollection<Group>(DBCollections.GROUPS);
+    }
 	/**
 	 * Gets the all report groups.
 	 *id, groupname, groupdesc
@@ -497,10 +454,12 @@ export class LocalDB {
     public static getAllGroups(): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getConnection().get('groups', function (err, groups) {
-                if (err) reject(err); // likely the key was not found
-                resolve(groups);
-            });
+            var groupColl = $that._getGroupCollection();
+            if (!groupColl) {
+                reject("No Groups");
+            } else {
+                resolve(groupColl.data);
+            }
         });
     }
 
@@ -514,15 +473,12 @@ export class LocalDB {
     public static insertGroup(gp: Group): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.push(gp);
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err) reject(err);
-                    resolve(gp);
-                });
-            }, function (err) {
-                reject(err);
-            });
+           var group= $that._getGroupCollection().add(gp);
+           if (!group) {
+               reject("Faield to insert Group");
+           } else {
+               resolve(group);
+           }
         });
     }
 
@@ -534,19 +490,12 @@ export class LocalDB {
     public static updateGroup(gp: Group): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.forEach(function (item, index) {
-                    if (item.id === gp.id) {
-                        groups[index] = gp;
-                    }
-                });
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err) reject(err);
-                    resolve(true);
-                });
-            }, function (err) {
-                reject(err);
-            });
+            var group = $that._getGroupCollection().update(gp);
+            if (!group) {
+                reject("Faield to update Group");
+            } else {
+                resolve(group);
+            }
         });
     }
 
@@ -558,38 +507,20 @@ export class LocalDB {
     public static deleteGroup(groupId: number): any {
         var $that = this;
         return new Promise(function (resolve, reject) {
-            $that.getAllGroups().then(function (groups) {
-                groups.forEach(function (item, index) {
-                    if (item.id === groupId) {
-                        groups.splice(index, 1);
-                    }
-                });
-                $that.getConnection().put('groups', groups, function (err) {
-                    if (err) reject(err);
-                    resolve(true);
-                    $that.deleteReportGroupMapping(groupId);
-                });
-            }, function (err) {
-                reject(err);
-            });
+           $that._getGroupCollection().removeWhere({ id: groupId});
+           resolve(true);
+           $that.deleteReportGroupMapping(groupId);
         });
     }
 
     public static deleteReportGroupMapping(groupId: number): void {
         var $that = this;
-        $that.getReports().then(function (reports) {
-
-            reports.forEach(function (item, index) {
-                if (item.groupid === groupId) {
-                    reports[index].groupid = 0;
-                }
-            });
-            $that.getConnection().put('reports', reports, function (err) {
-            });
-        }, function (err) {
+        $that._getReportCollection().findAndUpdate(function (report): boolean {
+            return report.groupid === groupId;
+        }, function (report): CaxpyReport {
+            report.groupid = 0;
+            return report;
         });
     }
-
-
 
 }

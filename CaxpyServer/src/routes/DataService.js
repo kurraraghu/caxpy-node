@@ -27,7 +27,7 @@ module.exports = function (DataServiceRouter) {
     });
     //getReport
     DataServiceRouter.get(prefixUrl + '/report', function (req, res) {
-        var reportid;
+        var reportid = req.query.reportid;
         BiUtility_1.BiUtility.getReport(reportid)
             .then(function (report) {
             if (!report) {
@@ -53,6 +53,7 @@ module.exports = function (DataServiceRouter) {
     });
     //saveReport
     DataServiceRouter.post(prefixUrl + '/save', function (req, res) {
+        console.log(req.body);
         var report = req.body.report;
         var groupid = req.body.groupid;
         var report_name = BiUtility_1.BiUtility.saveReport(report, groupid);

@@ -68,7 +68,7 @@ var ReportUtility = (function () {
                     reportObject.chartData = chartData;
                     resolve(reportObject);
                 }, function (error) {
-                    reject(error);
+                    resolve(reportObject);
                 });
             }
             else {

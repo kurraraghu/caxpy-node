@@ -34,7 +34,7 @@ module.exports = function (DataServiceRouter: express.Router) {
 
     //getReport
     DataServiceRouter.get(prefixUrl+'/report', (req, res) => {
-        var reportid: string;
+        var reportid: string = req.query.reportid;
         BiUtility.getReport(reportid)
             .then(function (report) {
                 if (!report) {
